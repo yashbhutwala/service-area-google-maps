@@ -47,11 +47,10 @@ def build_url(origin='',
 
 	# mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'        
     if mode not in ['driving', 'walking', 'transit', 'bicycling']:
-    	raise Exception("mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'.")
+    	raise Exception("mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'")
 
     # Get the Google API keys from an external config file
     # If it's your own personal Google Maps account, it looks like this:
-    #
     # [api]
     # api_number=<your api number>
     #
@@ -389,7 +388,7 @@ def generate_isochrone_map(origin='',
 # For lat/long: N, E are positive; S, W are negative
 origin = [39.9500, -75.1667]
 duration = 30
-mode = 'driving'
+mode = 'walking'
 number_of_angles = 10
 generate_isochrone_map(origin, duration, mode, number_of_angles)
 # get_isochrone(origin, duration, mode, number_of_angles)
@@ -404,6 +403,41 @@ generate_isochrone_map(origin, duration, mode, number_of_angles)
 
 # Spent 40 total requests 0.1467 requests/second for Philadelphia [39.9500, -75.1667] with transit time = 30 minutes, and number_of_angles = 25 and tolerance = 0.1
 # Finished in 115 s: Spent 58 total requests 0.1767 requests/second for Philadelphia [39.9500, -75.1667] with transit time = 30 minutes, and number_of_angles = 50 and tolerance = 0.1
-# Cannot go beyond 50 angles, gives an error: 
-# 
-# 
+# Cannot go beyond 50 angles, gives an error: urllib.error.HTTPError: HTTP Error 400: Bad Request
+
+#################### DRIVING #############################
+# [Finished in 25.1s]
+# Spent 26 total requests 0.0289 requests/second for Philadelphia [39.9500, -75.1667] with driving time = 30 minutes, and number_of_angles = 10 and tolerance = 0.1
+
+# [Finished in 65.1s]
+# Spent 58 total requests 0.0933 requests/second for Philadelphia [39.9500, -75.1667] with driving time = 30 minutes, and number_of_angles = 50 and tolerance = 0.1
+
+#################### Walking #############################
+# [Finished in 7.7s]
+# Spent 12 total requests 0.04 requests/second for Philadelphia [39.9500, -75.1667] with walking time = 30 minutes, and number_of_angles = 10 and tolerance = 0.1
+
+# [Finished in 76.2s]
+# Spent 59 total requests 0.1967 requests/second for Philadelphia [39.9500, -75.1667] with walking time = 30 minutes, and number_of_angles = 50 and tolerance = 0.1
+
+# {
+#    "destination_addresses" : [ "2100-2102 N Woodstock St, Philadelphia, PA 19121, USA" ],
+#    "origin_addresses" : [ "1507 Moravian St, Philadelphia, PA 19102, USA" ],
+#    "rows" : [
+#       {
+#          "elements" : [
+#             {
+#                "distance" : {
+#                   "text" : "2.9 mi",
+#                   "value" : 4623
+#                },
+#                "duration" : {
+#                   "text" : "17 mins",
+#                   "value" : 1034
+#                },
+#                "status" : "OK"
+#             }
+#          ]
+#       }
+#    ],
+#    "status" : "OK"
+# }
