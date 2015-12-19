@@ -178,15 +178,15 @@ def get_bearing(origin='',
     return bearing
 
 def sort_points(origin='',
-                iso='',
+                serv='',
                 config_path='config/'):
     """
     Put the service area points in a proper order
     """
     if origin == '':
         raise Exception('origin cannot be blank.')
-    if iso == '':
-        raise Exception('iso cannot be blank.')
+    if serv == '':
+        raise Exception('serv cannot be blank.')
 
     if isinstance(origin, list) and len(origin) == 2:
         origin_geocode = origin
@@ -194,13 +194,13 @@ def sort_points(origin='',
         raise Exception('origin should be a list: [lat, lng]')
 
     bearings = []
-    for row in iso:
+    for row in serv:
         bearings.append(get_bearing(origin_geocode, row))
 
-    points = zip(bearings, iso)
+    points = zip(bearings, serv)
     sorted_points = sorted(points)
-    sorted_iso = [point[1] for point in sorted_points]
-    return sorted_iso
+    sorted_serv = [point[1] for point in sorted_points]
+    return sorted_serv
 
 def get_service_area(origin='',
                   duration='',
@@ -244,7 +244,7 @@ def get_service_area(origin='',
     rad0 = [0] * number_of_angles
     rmin = [0] * number_of_angles
     rmax = [1.25 * duration] * number_of_angles  # rmax based on 75 mph speed
-    iso = [[0, 0]] * number_of_angles
+    serv = [[0, 0]] * number_of_angles
 
     # Counter to ensure we're not getting out of hand
     j = 0
@@ -253,9 +253,9 @@ def get_service_area(origin='',
     while sum([a - b for a, b in zip(rad0, rad1)]) != 0:
         rad2 = [0] * number_of_angles
         for i in range(number_of_angles):
-            iso[i] = select_destination(origin, phi1[i], rad1[i], config_path)
+            serv[i] = select_destination(origin, phi1[i], rad1[i], config_path)
             time.sleep(0.1)
-        url = build_url(origin, iso, mode, config_path)
+        url = build_url(origin, serv, mode, config_path)
         data = parse_json(url)
         for i in range(number_of_angles):
             if (data[1][i] < (duration - tolerance)) & (data0[i] != data[0][i]):
@@ -274,12 +274,12 @@ def get_service_area(origin='',
             raise Exception("This is taking too long, so I'm just going to quit.")
 
     for i in range(number_of_angles):
-        iso[i] = geocode_address(data[0][i], config_path)
-        # This does not work: iso[i] = data[0][i]
+        serv[i] = geocode_address(data[0][i], config_path)
+        # This does not work: serv[i] = data[0][i]
         time.sleep(0.1)
 
-    iso = sort_points(origin, iso, config_path)
-    return iso
+    serv = sort_points(origin, serv, config_path)
+    return serv
 
 def generate_service_area_map(origin='',
                            duration='',
@@ -305,7 +305,7 @@ def generate_service_area_map(origin='',
     else:
         raise Exception('origin should be a list: [lat, lng]')
 
-    iso = get_service_area(origin, duration, mode, number_of_angles, tolerance, config_path)
+    serv = get_service_area(origin, duration, mode, number_of_angles, tolerance, config_path)
 
     htmltext = """
     <!DOCTYPE html>
@@ -338,7 +338,7 @@ def generate_service_area_map(origin='',
       var serviceAreaCoords = [
     """.format(origin_geocode[0], origin_geocode[1])
 
-    for i in iso:
+    for i in serv:
         htmltext += 'new google.maps.LatLng({},{}), \n'.format(i[0], i[1])
 
     htmltext += """
@@ -363,11 +363,11 @@ def generate_service_area_map(origin='',
     """
     with open('service_area.html', 'w') as f:
         f.write(htmltext)
-    return iso
+    return serv
 
 origin = [39.9500, -75.1667]
 duration = 30
 mode = 'walking'
-number_of_angles = 10
+number_of_angles = 25
 # get_service_area(origin, duration, mode, number_of_angles)
 generate_service_area_map(origin, duration, mode, number_of_angles)
