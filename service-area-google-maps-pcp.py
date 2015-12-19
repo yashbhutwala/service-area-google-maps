@@ -22,14 +22,13 @@ def build_url(origin='',
     """
     Determine the url to pass for the desired search.
     """
-    # origin is a list: [lat, lng]
     if origin == '':
         raise Exception('origin cannot be blank.')
     elif isinstance(origin, list) and len(origin) == 2:
         origin_str = ','.join(map(str, origin))
     else:
         raise Exception('origin should be a list [lat, lng]')
-    # destination is similar, it is a list: [lat, lng]
+
     if destination == '':
         raise Exception('destination cannot be blank.')
     elif isinstance(destination, list):
@@ -62,11 +61,7 @@ def build_url(origin='',
     # Note that this URL should already be URL-encoded
     prefix = 'https://maps.googleapis.com/maps/api/distancematrix/json?&units=imperial'
 
-    url = urlparse.urlparse('{0}&mode={1}&origins={2}&destinations={3}&key={4}'.format(prefix,
-																						mode,
-		                                                                                origin_str,
-		                                                                                destination_str,
-		                                                                                key))
+    url = urlparse.urlparse('{0}&mode={1}&origins={2}&destinations={3}&key={4}'.format(prefix, mode, origin_str, destination_str, key))
     full_url = url.scheme + '://' + url.netloc + url.path + '?' + url.query
     return full_url
 
@@ -96,7 +91,6 @@ def parse_json(url=''):
             else:
                 durations[i] = row['duration']['value'] / 60
         i += 1
-    # print([addresses, durations])
     return [addresses, durations]
 
 def geocode_address(address='',
@@ -112,19 +106,10 @@ def geocode_address(address='',
     else:
         raise Exception('address should be a string.')
 
-    # Get the Google API keys from an external config file
-    # If it's your own personal Google Maps account, it looks like this:
-    #
-    # [api]
-    # api_number=<your api number>
-    #
     config = ConfigParser.SafeConfigParser()
     config.read('{}google_maps.cfg'.format(config_path))
     key = config.get('api', 'api_number')
 
-    # Convert the URL string to a URL, which we can parse
-    # using the urlparse() function into path and query
-    # Note that this URL should already be URL-encoded
     prefix = 'https://maps.googleapis.com/maps/api/geocode/json'
     url = urlparse.urlparse('{0}?address={1}&key={2}'.format(prefix,
                                                              address_str,
@@ -164,8 +149,7 @@ def select_destination(origin='',
         raise Exception('origin should be a list: [lat, lng]')
 
     # Find the location on a sphere a distance 'radius' along a bearing 'angle' from origin
-    # This uses haversines rather than simple Pythagorean distance in Euclidean space
-    #   because spheres are more complicated than planes.
+    # This uses haversines rather than simple Pythagorean distance in Euclidean space because spheres are more complicated than planes.
     r = 3963.1676  # Radius of the Earth in miles
     bearing = radians(angle)  # Bearing in radians converted from angle in degrees
     lat1 = radians(origin_geocode[0])
@@ -175,7 +159,6 @@ def select_destination(origin='',
     lat2 = degrees(lat2)
     lng2 = degrees(lng2)
     return [lat2, lng2]
-
 
 def get_bearing(origin='',
                 destination=''):
@@ -194,12 +177,11 @@ def get_bearing(origin='',
     bearing = (bearing + 360) % 360
     return bearing
 
-
 def sort_points(origin='',
                 iso='',
                 config_path='config/'):
     """
-    Put the isochrone points in a proper order
+    Put the service area points in a proper order
     """
     if origin == '':
         raise Exception('origin cannot be blank.')
@@ -220,7 +202,7 @@ def sort_points(origin='',
     sorted_iso = [point[1] for point in sorted_points]
     return sorted_iso
 
-def get_isochrone(origin='',
+def get_service_area(origin='',
                   duration='',
                   mode='',
                   number_of_angles=10,
@@ -228,12 +210,12 @@ def get_isochrone(origin='',
                   config_path='config/'):
     """
     Putting it all together.
-    Given a starting location and amount of time for the isochrone to represent (e.g. a 15 minute isochrone from origin)
+    Given a starting location and amount of time for the service area to represent (e.g. a 15 minute service area from origin)
       use the Google Maps distance matrix API to check travel times along a number of bearings around the origin for
       an equal number of radii. Perform a binary search on radius along each bearing until the duration returned from
-      the API is within a tolerance of the isochrone duration.
+      the API is within a tolerance of the service area duration.
     origin = string address or [lat, lng] 2-list
-    duration = minutes that the isochrone contour value should map
+    duration = minutes that the service area contour value should map
     mode = mode of transportation to use
     number_of_angles = how many bearings to calculate this contour for (think of this like resolution)
     tolerance = how many minutes within the exact answer for the contour is good enough
@@ -255,7 +237,7 @@ def get_isochrone(origin='',
         raise Exception('origin should be a list [lat, lng]')
 
     # Make a radius list, one element for each angle,
-    # whose elements will update until the isochrone is found
+    # whose elements will update until the service area is found
     rad1 = [duration / 12] * number_of_angles  # initial r guess based on 5 mph speed
     phi1 = [i * (360 / number_of_angles) for i in range(number_of_angles)]
     data0 = [0] * number_of_angles
@@ -299,14 +281,14 @@ def get_isochrone(origin='',
     iso = sort_points(origin, iso, config_path)
     return iso
 
-def generate_isochrone_map(origin='',
+def generate_service_area_map(origin='',
                            duration='',
                            mode='',
                            number_of_angles=10,
                            tolerance=0.1,
                            config_path='config/'):
     """
-    Call the get_isochrone function and generate a simple html file using its output.
+    Call the get_service_area function and generate a simple html file using its output.
     """
     if origin == '':
         raise Exception('origin cannot be blank')
@@ -323,7 +305,7 @@ def generate_isochrone_map(origin='',
     else:
         raise Exception('origin should be a list: [lat, lng]')
 
-    iso = get_isochrone(origin, duration, mode, number_of_angles, tolerance, config_path)
+    iso = get_service_area(origin, duration, mode, number_of_angles, tolerance, config_path)
 
     htmltext = """
     <!DOCTYPE html>
@@ -331,7 +313,7 @@ def generate_isochrone_map(origin='',
     <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <title>Isochrone</title>
+    <title>Service Area</title>
     <style>
       html, body, #map-canvas {{
         height: 100%;
@@ -352,8 +334,8 @@ def generate_isochrone_map(origin='',
           position: new google.maps.LatLng({0},{1}),
           map: map
       }});
-      var isochrone;
-      var isochroneCoords = [
+      var serviceArea;
+      var serviceAreaCoords = [
     """.format(origin_geocode[0], origin_geocode[1])
 
     for i in iso:
@@ -361,15 +343,15 @@ def generate_isochrone_map(origin='',
 
     htmltext += """
       ];
-      isochrone = new google.maps.Polygon({
-        paths: isochroneCoords,
+      serviceArea = new google.maps.Polygon({
+        paths: serviceAreaCoords,
         strokeColor: '#000',
         strokeOpacity: 0.5,
         strokeWeight: 1,
         fillColor: '#000',
         fillOpacity: 0.25
       });
-      isochrone.setMap(map);
+      serviceArea.setMap(map);
     }
     google.maps.event.addDomListener(window, 'load', initialize);
     </script>
@@ -379,65 +361,13 @@ def generate_isochrone_map(origin='',
     </body>
     </html>
     """
-
-    with open('isochrone.html', 'w') as f:
+    with open('service_area.html', 'w') as f:
         f.write(htmltext)
-
     return iso
 
-# For lat/long: N, E are positive; S, W are negative
 origin = [39.9500, -75.1667]
 duration = 30
 mode = 'walking'
 number_of_angles = 10
-generate_isochrone_map(origin, duration, mode, number_of_angles)
-# get_isochrone(origin, duration, mode, number_of_angles)
-
-# Spent 0.3667 requests/second for Philadelphia [39.9500, -75.1667] with transit time = 30 minutes, and number_of_angles = 10 and tolerance = 0.1
-# Pretty Accurate: https://goo.gl/hS1z6e  
-# https://maps.googleapis.com/maps/api/distancematrix/json?&units=imperial&mode=driving&origins=39.95,-75.1667&destinations=39.98614266749222,-75.1667&key=AIzaSyC8-RCnhKgzP4M-c6iI1sOHtIGL0WRzQK4
-
-# For number_of_angles = 50, getting Exception: Error. Google Maps API return status: OVER_QUERY_LIMIT
-# You can only request 10 per second
-# Find how many requests have been made today: https://console.developers.google.com/project
-
-# Spent 40 total requests 0.1467 requests/second for Philadelphia [39.9500, -75.1667] with transit time = 30 minutes, and number_of_angles = 25 and tolerance = 0.1
-# Finished in 115 s: Spent 58 total requests 0.1767 requests/second for Philadelphia [39.9500, -75.1667] with transit time = 30 minutes, and number_of_angles = 50 and tolerance = 0.1
-# Cannot go beyond 50 angles, gives an error: urllib.error.HTTPError: HTTP Error 400: Bad Request
-
-#################### DRIVING #############################
-# [Finished in 25.1s]
-# Spent 26 total requests 0.0289 requests/second for Philadelphia [39.9500, -75.1667] with driving time = 30 minutes, and number_of_angles = 10 and tolerance = 0.1
-
-# [Finished in 65.1s]
-# Spent 58 total requests 0.0933 requests/second for Philadelphia [39.9500, -75.1667] with driving time = 30 minutes, and number_of_angles = 50 and tolerance = 0.1
-
-#################### Walking #############################
-# [Finished in 7.7s]
-# Spent 12 total requests 0.04 requests/second for Philadelphia [39.9500, -75.1667] with walking time = 30 minutes, and number_of_angles = 10 and tolerance = 0.1
-
-# [Finished in 76.2s]
-# Spent 59 total requests 0.1967 requests/second for Philadelphia [39.9500, -75.1667] with walking time = 30 minutes, and number_of_angles = 50 and tolerance = 0.1
-
-# {
-#    "destination_addresses" : [ "2100-2102 N Woodstock St, Philadelphia, PA 19121, USA" ],
-#    "origin_addresses" : [ "1507 Moravian St, Philadelphia, PA 19102, USA" ],
-#    "rows" : [
-#       {
-#          "elements" : [
-#             {
-#                "distance" : {
-#                   "text" : "2.9 mi",
-#                   "value" : 4623
-#                },
-#                "duration" : {
-#                   "text" : "17 mins",
-#                   "value" : 1034
-#                },
-#                "status" : "OK"
-#             }
-#          ]
-#       }
-#    ],
-#    "status" : "OK"
-# }
+# get_service_area(origin, duration, mode, number_of_angles)
+generate_service_area_map(origin, duration, mode, number_of_angles)
