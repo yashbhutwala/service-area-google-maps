@@ -1,6 +1,6 @@
 # service-area-google-maps
 
-For a given [lat,long] location, calculate an service area around it. Any point on an x-minute contour should take a total of x minutes of travel to reach from the origin. Any point within an x-minute contour should be reachable in fewer than x minutes.
+For a given [lat,long] location, calculate a service area around it. Any point on an x-minute contour should take a total of x minutes of travel to reach from the origin. Any point within an x-minute contour should be reachable in fewer than x minutes.
 
 ### Parameters
 
@@ -8,15 +8,15 @@ __origin__ : must be a list containing [lat, lng]; For lat/long as per conventio
 
 __duration__ : Number of minutes for the service area
 
-__mode__ : must be either 'driving' or 'walking' or 'transit' or 'bicycling'
+__mode__ : must be either 'driving' or 'walking' or 'transit' or 'bicycling', __default: 'driving'__
 
-__number_of_angles__ : Number of points defining the service area (int) -- default: 10
+__number_of_angles__ : Number of points defining the service area (int), __default: 10__
 
-__tolerance__ : Number of minutes that a test point can be away from __duration__ to be considered acceptable, default: 0.1
+__tolerance__ : Number of minutes that a test point can be away from duration to be considered acceptable, __default: 0.1__
 
-__config_path__ : Path location (str) of the 'google_maps.cfg' file, default 'config/'
-  * Make a file called 'google_maps.cfg' in a directory called 'config/' 
-  * Format of the config file must be (e.g. if your api_number were 1234567890, you would replace \<your api number\> below with 1234567890):
+__config_path__ : Path location (str) of the 'google_maps.cfg' file, __default: 'config/'__
+  * Make a file called 'google_maps.cfg' in a directory called 'config/'
+  * Format of the config file must be: (e.g. if your api_number were 1234567890, you would replace \<your api number\> below with 1234567890):
 
 ```
 [api]
@@ -55,4 +55,3 @@ get_service_area(origin, duration, mode, number_of_angles)
 # OR generate html file
 generate_service_area_map(origin, duration, mode, number_of_angles)
 ```
-

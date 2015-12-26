@@ -44,7 +44,7 @@ def build_url(origin='',
     else:
         raise Exception('destination must be a a list of lists [lat, lng]')
 
-	# mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'        
+	# mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'
     if mode not in ['driving', 'walking', 'transit', 'bicycling']:
     	raise Exception("mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'")
 
@@ -55,7 +55,7 @@ def build_url(origin='',
     #
     config = ConfigParser.SafeConfigParser()
     config.read('{}google_maps.cfg'.format(config_path))
-    key = config.get('api', 'api_number')    
+    key = config.get('api', 'api_number')
     # Convert the URL string to a URL, which we can parse
     # using the urlparse() function into path and query
     # Note that this URL should already be URL-encoded
@@ -204,7 +204,7 @@ def sort_points(origin='',
 
 def get_service_area(origin='',
                   duration='',
-                  mode='',
+                  mode='driving',
                   number_of_angles=10,
                   tolerance=0.1,
                   config_path='config/'):
@@ -225,8 +225,6 @@ def get_service_area(origin='',
         raise Exception('origin cannot be blank')
     if duration == '':
         raise Exception('duration cannot be blank')
-    if mode == '':
-        raise Exception('mode cannot be blank')  
     if not isinstance(number_of_angles, int):
         raise Exception('number_of_angles must be an int')
     if not isinstance(tolerance, float):
@@ -266,7 +264,7 @@ def get_service_area(origin='',
                 rmax[i] = rad1[i]
             else:
                 rad2[i] = rad1[i]
-            data0[i] = data[0][i]   
+            data0[i] = data[0][i]
         rad0 = rad1
         rad1 = rad2
         j += 1
@@ -283,7 +281,7 @@ def get_service_area(origin='',
 
 def generate_service_area_map(origin='',
                            duration='',
-                           mode='',
+                           mode='driving',
                            number_of_angles=10,
                            tolerance=0.1,
                            config_path='config/'):
@@ -294,8 +292,6 @@ def generate_service_area_map(origin='',
         raise Exception('origin cannot be blank')
     if duration == '':
         raise Exception('duration cannot be blank')
-    if mode == '':
-        raise Exception('mode cannot be blank')        
     if not isinstance(number_of_angles, int):
         raise Exception('number_of_angles must be an int')
     if not isinstance(tolerance, float):
