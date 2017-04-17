@@ -13,7 +13,7 @@ from math import cos, sin, tan, sqrt, pi, radians, degrees, asin, atan2
 # urlparse --> urllib.parse (Python 3)
 # ConfigParser --> configparser (Python 3)
 # pip install simplejson
-# urllib2 --> urllib.request AND urllib.error
+# urllib2 --> urllib.request AND urllib.error (Python 3)
 
 def build_url(origin='',
               destination='',
