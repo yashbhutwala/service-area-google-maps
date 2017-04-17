@@ -33,15 +33,11 @@ api_number=<your api number>
 
 This module makes use of the following Python modules that you must have installed.
 
-* hashlib
-* hmac
-* base64
 * urllib.parse
 * configparser
 * simplejson
 * urllib.request
 * time
-* datetime
 * math
 
 ### Use
