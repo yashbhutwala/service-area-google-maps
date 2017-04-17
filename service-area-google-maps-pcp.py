@@ -1,14 +1,13 @@
 from __future__ import division
-import hashlib
-import hmac
-import base64
-import urllib.parse as urlparse
+
+import time
+from math import cos, sin, pi, radians, degrees, asin, atan2
+
 import configparser as ConfigParser
 import simplejson
+import urllib.parse as urlparse
 import urllib.request as urllib2
-import time
-import datetime
-from math import cos, sin, tan, sqrt, pi, radians, degrees, asin, atan2
+
 
 # urlparse --> urllib.parse (Python 3)
 # ConfigParser --> configparser (Python 3)
@@ -19,7 +18,7 @@ def build_url(origin='',
               destination='',
               mode='',
               config_path='config/'):
-    """
+    """ 
     Determine the url to pass for the desired search.
     """
     if origin == '':
@@ -44,9 +43,9 @@ def build_url(origin='',
     else:
         raise Exception('destination must be a a list of lists [lat, lng]')
 
-	# mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'
+    # mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'
     if mode not in ['driving', 'walking', 'transit', 'bicycling']:
-    	raise Exception("mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'")
+        raise Exception("mode must be either 'driving' or 'walking' or 'transit' or 'bicycling'")
 
     # Get the Google API keys from an external config file
     # If it's your own personal Google Maps account, it looks like this:
@@ -61,13 +60,15 @@ def build_url(origin='',
     # Note that this URL should already be URL-encoded
     prefix = 'https://maps.googleapis.com/maps/api/distancematrix/json?&units=imperial'
 
-    url = urlparse.urlparse('{0}&mode={1}&origins={2}&destinations={3}&key={4}'.format(prefix, mode, origin_str, destination_str, key))
+    url = urlparse.urlparse(
+        '{0}&mode={1}&origins={2}&destinations={3}&key={4}'.format(prefix, mode, origin_str, destination_str, key))
     full_url = url.scheme + '://' + url.netloc + url.path + '?' + url.query
     return full_url
 
+
 def parse_json(url=''):
-    """
-    Parse the json response from the API
+    """ 
+    Parse the json response from the API. 
     """
     req = urllib2.Request(url)
     opener = urllib2.build_opener()
@@ -93,10 +94,11 @@ def parse_json(url=''):
         i += 1
     return [addresses, durations]
 
+
 def geocode_address(address='',
                     config_path='config/'):
-    """
-    For use in calculating distances between 2 locations, the [lat, lng] is needed instead of the address.
+    """ 
+    For use in calculating distances between 2 locations, the [lat, lng] is needed instead of the address. 
     """
     # Convert origin and destination to URL-compatible strings
     if address == '':
@@ -129,12 +131,13 @@ def geocode_address(address='',
                d['results'][0]['geometry']['location']['lng']]
     return geocode
 
+
 def select_destination(origin='',
                        angle='',
                        radius='',
                        config_path='config/'):
-    """
-    Given a distance and polar angle, calculate the geocode of a destination point from the origin.
+    """ 
+    Given a distance and polar angle, calculate the geocode of a destination point from the origin. 
     """
     if origin == '':
         raise Exception('origin cannot be blank.')
@@ -160,10 +163,11 @@ def select_destination(origin='',
     lng2 = degrees(lng2)
     return [lat2, lng2]
 
+
 def get_bearing(origin='',
                 destination=''):
-    """
-    Calculate the bearing from origin to destination
+    """ 
+    Calculate the bearing from origin to destination. 
     """
     if origin == '':
         raise Exception('origin cannot be blank')
@@ -172,16 +176,18 @@ def get_bearing(origin='',
 
     bearing = atan2(sin((destination[1] - origin[1]) * pi / 180) * cos(destination[0] * pi / 180),
                     cos(origin[0] * pi / 180) * sin(destination[0] * pi / 180) -
-                    sin(origin[0] * pi / 180) * cos(destination[0] * pi / 180) * cos((destination[1] - origin[1]) * pi / 180))
+                    sin(origin[0] * pi / 180) * cos(destination[0] * pi / 180) * cos(
+                        (destination[1] - origin[1]) * pi / 180))
     bearing = bearing * 180 / pi
     bearing = (bearing + 360) % 360
     return bearing
 
+
 def sort_points(origin='',
                 serv='',
                 config_path='config/'):
-    """
-    Put the service area points in a proper order
+    """ 
+    Put the service area points in a proper order. 
     """
     if origin == '':
         raise Exception('origin cannot be blank.')
@@ -202,18 +208,19 @@ def sort_points(origin='',
     sorted_serv = [point[1] for point in sorted_points]
     return sorted_serv
 
+
 def get_service_area(origin='',
-                  duration='',
-                  mode='driving',
-                  number_of_angles=10,
-                  tolerance=0.1,
-                  config_path='config/'):
+                     duration='',
+                     mode='driving',
+                     number_of_angles=10,
+                     tolerance=0.1,
+                     config_path='config/'):
     """
-    Putting it all together.
-    Given a starting location and amount of time for the service area to represent (e.g. a 15 minute service area from origin)
-      use the Google Maps distance matrix API to check travel times along a number of bearings around the origin for
-      an equal number of radii. Perform a binary search on radius along each bearing until the duration returned from
-      the API is within a tolerance of the service area duration.
+    Given a starting location and amount of time for the service area to represent (e.g. a 15 minute service area from origin) 
+    use the Google Maps distance matrix API to check travel times along a number of bearings around the origin for
+    an equal number of radii. Perform a binary search on radius along each bearing until the duration returned from
+    the API is within a tolerance of the service area duration.
+    
     origin = string address or [lat, lng] 2-list
     duration = minutes that the service area contour value should map
     mode = mode of transportation to use
@@ -279,12 +286,13 @@ def get_service_area(origin='',
     serv = sort_points(origin, serv, config_path)
     return serv
 
+
 def generate_service_area_map(origin='',
-                           duration='',
-                           mode='driving',
-                           number_of_angles=10,
-                           tolerance=0.1,
-                           config_path='config/'):
+                              duration='',
+                              mode='driving',
+                              number_of_angles=10,
+                              tolerance=0.1,
+                              config_path='config/'):
     """
     Call the get_service_area function and generate a simple html file using its output.
     """
@@ -357,9 +365,11 @@ def generate_service_area_map(origin='',
     </body>
     </html>
     """
+
     with open('service_area.html', 'w') as f:
         f.write(htmltext)
     return serv
+
 
 origin = [39.9500, -75.1667]
 duration = 30
